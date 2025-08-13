@@ -30,15 +30,18 @@ screen = pg.display.set_mode((WIDTH, HEIGHT))
 pg.display.set_caption("IF/ELSE — Trilha da Borborema")
 clock = pg.time.Clock()
 
+
 def load_font(size=24):
     try:
         return pg.font.SysFont("DejaVu Sans Mono", size)
     except:
         return pg.font.SysFont(None, size)
 
+
 FONT = load_font(22)
 FONT_BIG = load_font(36)
 FONT_HUGE = load_font(56)
+
 
 class State:
     ABERTURA = 0
@@ -46,6 +49,7 @@ class State:
     DEC1 = 2
     DEC2 = 3
     FINAL = 4
+
 
 state = State.ABERTURA
 
@@ -64,15 +68,36 @@ t0 = 0
 decision_timer = 5.0
 
 # Decisões A/B
-OPT1_A = {"id": "21_inovacao", "title": "Liderando com inovação", "who": "Dafna Blaschkauer", "meta": "Palco Mandacaru | 21/08 — 18h30"}
-OPT1_B = {"id": "21_carreira", "title": "Carreira, Empreendedorismo e Economia Criativa", "who": "Carlinhos Brown & Marc Tawill", "meta": "Palco Principal | 21/08 — 20h"}
-OPT2_A = {"id": "22_ia", "title": "IA aplicada à rotina dos pequenos negócios", "who": "Andrea Formiga", "meta": "Palco Angico | 22/08 — 15h30"}
-OPT2_B = {"id": "22_criativo", "title": "O futuro é criativo", "who": "Caio Viana", "meta": "Palco Broto de Catingueiras | 22/08 — 16h45"}
+OPT1_A = {
+    "id": "21_inovacao",
+    "title": "Liderando com inovação",
+    "who": "Dafna Blaschkauer",
+    "meta": "Palco Mandacaru | 21/08 — 18h30",
+}
+OPT1_B = {
+    "id": "21_carreira",
+    "title": "Carreira, Empreendedorismo e Economia Criativa",
+    "who": "Carlinhos Brown & Marc Tawill",
+    "meta": "Palco Principal | 21/08 — 20h",
+}
+OPT2_A = {
+    "id": "22_ia",
+    "title": "IA aplicada à rotina dos pequenos negócios",
+    "who": "Andrea Formiga",
+    "meta": "Palco Angico | 22/08 — 15h30",
+}
+OPT2_B = {
+    "id": "22_criativo",
+    "title": "O futuro é criativo",
+    "who": "Caio Viana",
+    "meta": "Palco Broto de Catingueiras | 22/08 — 16h45",
+}
 choices = {"d1": None, "d2": None}
 
 # Botões finais
-BTN_DOWNLOAD = pg.Rect(WIDTH//2 - 180, HEIGHT - 110, 160, 50)
-BTN_RESTART  = pg.Rect(WIDTH//2 + 20, HEIGHT - 110, 160, 50)
+BTN_DOWNLOAD = pg.Rect(WIDTH // 2 - 180, HEIGHT - 110, 160, 50)
+BTN_RESTART = pg.Rect(WIDTH // 2 + 20, HEIGHT - 110, 160, 50)
+
 
 # Helpers de desenho, física, UI, etc.
 # ------------------------------
@@ -80,19 +105,21 @@ def reset_level():
     global obstacles, collects, scroll_x, player_y, player_vy, on_ground, commits, t0
     obstacles, collects = [], []
     scroll_x = 0.0
-    player_y, player_vy, on_ground, commits = HEIGHT*0.7, 0.0, True, 0
+    player_y, player_vy, on_ground, commits = HEIGHT * 0.7, 0.0, True, 0
     t0 = time.time()
     for i in range(10):
-        x = WIDTH + i*320 + random.randint(-60, 60)
+        x = WIDTH + i * 320 + random.randint(-60, 60)
         w = random.randint(40, 70)
         h = random.randint(24, 40)
-        y = HEIGHT*0.78
+        y = HEIGHT * 0.78
         obstacles.append(pg.Rect(x, y, w, h))
         if random.random() < 0.7:
-            collects.append(pg.Rect(x + w//2 - 8, y - 120, 16, 16))
+            collects.append(pg.Rect(x + w // 2 - 8, y - 120, 16, 16))
+
 
 def player_rect():
     return pg.Rect(int(player_x), int(player_y) - 48, 32, 48)
+
 
 def try_jump():
     global on_ground, player_vy
@@ -100,14 +127,16 @@ def try_jump():
         player_vy = jump_v
         on_ground = False
 
+
 def handle_physics(dt):
     global player_y, player_vy, on_ground
     if not on_ground:
         player_vy += gravity * dt
     player_y += player_vy * dt
-    ground_y = HEIGHT*0.8
+    ground_y = HEIGHT * 0.8
     if player_y >= ground_y:
         player_y, player_vy, on_ground = ground_y, 0.0, True
+
 
 def update_world(dt):
     global scroll_x, commits
@@ -123,6 +152,7 @@ def update_world(dt):
             commits += 1
             collects.remove(c)
 
+
 # UI Drawing
 # ------------------------------
 def draw_text(surf, text, pos, font=FONT, color=FG, center=False):
@@ -131,58 +161,78 @@ def draw_text(surf, text, pos, font=FONT, color=FG, center=False):
         for line in text:
             img = font.render(line, True, color)
             rect = img.get_rect(topleft=(pos[0], y))
-            if center: rect.centerx = pos[0]
+            if center:
+                rect.centerx = pos[0]
             surf.blit(img, rect)
             y += rect.height + 2
         return
     img = font.render(text, True, color)
     rect = img.get_rect(topleft=pos)
-    if center: rect.centerx = pos[0]
+    if center:
+        rect.centerx = pos[0]
     surf.blit(img, rect)
+
 
 def rect_card(surf, rect, title, who, meta, color):
     pg.draw.rect(surf, color, rect, 0, border_radius=18)
-    pg.draw.rect(surf, (0,0,0), rect, 2, border_radius=18)
-    pad = 14; x, y = rect.x+pad, rect.y+pad
-    draw_text(surf, title, (x,y), FONT_BIG, (0,0,0))
-    draw_text(surf, who, (x, y+34), FONT, (20,20,20))
-    draw_text(surf, meta, (x, y+58), FONT, (32,32,32))
+    pg.draw.rect(surf, (0, 0, 0), rect, 2, border_radius=18)
+    pad = 14
+    x, y = rect.x + pad, rect.y + pad
+    draw_text(surf, title, (x, y), FONT_BIG, (0, 0, 0))
+    draw_text(surf, who, (x, y + 34), FONT, (20, 20, 20))
+    draw_text(surf, meta, (x, y + 58), FONT, (32, 32, 32))
+
 
 def decision_screen(title, left, right, time_left):
     screen.fill(BG)
-    draw_text(screen, title, (WIDTH//2, 50), FONT_BIG, ACCENT2, center=True)
-    L = pg.Rect(80, 120, WIDTH//2 - 120, 320)
-    R = pg.Rect(WIDTH//2 + 40, 120, WIDTH//2 - 120, 320)
+    draw_text(screen, title, (WIDTH // 2, 50), FONT_BIG, ACCENT2, center=True)
+    L = pg.Rect(80, 120, WIDTH // 2 - 120, 320)
+    R = pg.Rect(WIDTH // 2 + 40, 120, WIDTH // 2 - 120, 320)
     rect_card(screen, L, left["title"], left["who"], left["meta"], CARD_L)
     rect_card(screen, R, right["title"], right["who"], right["meta"], CARD_R)
     bar_w = int((time_left / 5.0) * (WIDTH - 160))
-    pg.draw.rect(screen, (50,56,70), (80,460, WIDTH-160,10), border_radius=6)
-    pg.draw.rect(screen, ACCENT, (80,460, max(10,bar_w),10), border_radius=6)
-    draw_text(screen, "Clique no cartão para escolher (auto B em 5s)", (WIDTH//2,485), FONT, FG, center=True)
+    pg.draw.rect(screen, (50, 56, 70), (80, 460, WIDTH - 160, 10), border_radius=6)
+    pg.draw.rect(screen, ACCENT, (80, 460, max(10, bar_w), 10), border_radius=6)
+    draw_text(screen, "Clique no cartão para escolher (auto B em 5s)", (WIDTH // 2, 485), FONT, FG, center=True)
     return L, R
+
 
 def final_screen():
     screen.fill(BG)
-    draw_text(screen, "Trilha Compilada", (WIDTH//2,40), FONT_HUGE, ACCENT2, center=True)
+    draw_text(screen, "Trilha Compilada", (WIDTH // 2, 40), FONT_HUGE, ACCENT2, center=True)
     y = 120
-    for label,opt in (("Dia 21", choices["d1"]), ("Dia 22", choices["d2"])):
-        r = pg.Rect(80, y, WIDTH-160, 96)
-        pg.draw.rect(screen, (28,34,46), r, 0, border_radius=14)
-        pg.draw.rect(screen, (0,0,0), r, 2, border_radius=14)
-        draw_text(screen, f"{label}: {opt['title']}", (r.x+16, r.y+12), FONT_BIG, FG)
-        draw_text(screen, f"{opt['who']} | {opt['meta']}", (r.x+16, r.y+52), FONT, (200,210,220))
+    for label, opt in (("Dia 21", choices["d1"]), ("Dia 22", choices["d2"])):
+        r = pg.Rect(80, y, WIDTH - 160, 96)
+        pg.draw.rect(screen, (28, 34, 46), r, 0, border_radius=14)
+        pg.draw.rect(screen, (0, 0, 0), r, 2, border_radius=14)
+        draw_text(screen, f"{label}: {opt['title']}", (r.x + 16, r.y + 12), FONT_BIG, FG)
+        draw_text(screen, f"{opt['who']} | {opt['meta']}", (r.x + 16, r.y + 52), FONT, (200, 210, 220))
         y += 112
     # buttons
-    pg.draw.rect(screen, (32,120,90), BTN_DOWNLOAD, 0, border_radius=12)
-    pg.draw.rect(screen, (0,0,0), BTN_DOWNLOAD, 2, border_radius=12)
-    draw_text(screen, "Baixar CSV", (BTN_DOWNLOAD.centerx, BTN_DOWNLOAD.centery-12), FONT_BIG, (0,0,0), center=True)
-    pg.draw.rect(screen, (120,40,60), BTN_RESTART, 0, border_radius=12)
-    pg.draw.rect(screen, (0,0,0), BTN_RESTART, 2, border_radius=12)
-    draw_text(screen, "Reiniciar", (BTN_RESTART.centerx, BTN_RESTART.centery-12), FONT_BIG, (0,0,0), center=True)
-    draw_text(screen, f"Commits coletados: {commits}", (WIDTH-260,16), FONT, YELLOW)
+    pg.draw.rect(screen, (32, 120, 90), BTN_DOWNLOAD, 0, border_radius=12)
+    pg.draw.rect(screen, (0, 0, 0), BTN_DOWNLOAD, 2, border_radius=12)
+    draw_text(screen, "Baixar CSV", (BTN_DOWNLOAD.centerx, BTN_DOWNLOAD.centery - 12), FONT_BIG, (0, 0, 0), center=True)
+    pg.draw.rect(screen, (120, 40, 60), BTN_RESTART, 0, border_radius=12)
+    pg.draw.rect(screen, (0, 0, 0), BTN_RESTART, 2, border_radius=12)
+    draw_text(screen, "Reiniciar", (BTN_RESTART.centerx, BTN_RESTART.centery - 12), FONT_BIG, (0, 0, 0), center=True)
+    draw_text(screen, f"Commits coletados: {commits}", (WIDTH - 260, 16), FONT, YELLOW)
 
-# CSV / localStorage helpers (idem original)
-# ...
+    class DummyBG:
+        def draw(self, surf, dt):
+            surf.fill((255, 0, 0))  # fundo vermelho
+    bg = DummyBG()
+
+    def draw_world(surf, dt):
+        pg.draw.rect(surf, (0, 0, 255), (0, HEIGHT//2, WIDTH, HEIGHT//2))
+
+    def draw_player(surf):
+        pg.draw.rect(surf, (255, 255, 0), player_rect())
+
+    def download_csv(data):
+        print("CSV gerado:", data)
+
+    def save_local(data):
+        print("Dados salvos:", data)
 
 async def game_loop():
     global state, decision_timer, choices, commits
@@ -236,14 +286,21 @@ async def game_loop():
         if state == State.ABERTURA:
             screen.fill(BG)
             bg.draw(screen, dt)
-            draw_text(screen, "IF/ELSE — Trilha da Borborema", (WIDTH//2,140), FONT_HUGE, ACCENT2, center=True)
-            draw_text(screen, ["Clique para começar.", "Durante o jogo: clique para pular.", "Nas escolhas: clique no cartão desejado."], (WIDTH//2,240), FONT_BIG, FG, center=True)
+            draw_text(screen, "IF/ELSE — Trilha da Borborema", (WIDTH // 2, 140), FONT_HUGE, ACCENT2, center=True)
+            draw_text(
+                screen,
+                ["Clique para começar.", "Durante o jogo: clique para pular.", "Nas escolhas: clique no cartão desejado."],
+                (WIDTH // 2, 240),
+                FONT_BIG,
+                FG,
+                center=True,
+            )
         elif state == State.JOGO:
             update_world(dt)
             screen.fill(BG)
             draw_world(screen, dt)
             draw_player(screen)
-            draw_text(screen, f"Commits: {commits}", (20,16), FONT, YELLOW)
+            draw_text(screen, f"Commits: {commits}", (20, 16), FONT, YELLOW)
             dist = int((time.time() - t0) * speed)
             if choices["d1"] is None and dist > 900:
                 state = State.DEC1
@@ -254,7 +311,7 @@ async def game_loop():
             handle_physics(dt)
         elif state == State.DEC1:
             decision_timer -= dt
-            decision_screen("Dia 21 — Selecione sua ênfase", OPT1_A, OPT1_B, max(0,decision_timer))
+            decision_screen("Dia 21 — Selecione sua ênfase", OPT1_A, OPT1_B, max(0, decision_timer))
             if decision_timer <= 0:
                 choices["d1"] = OPT1_B
                 state = State.JOGO
@@ -262,7 +319,7 @@ async def game_loop():
                 decision_timer = 5.0
         elif state == State.DEC2:
             decision_timer -= dt
-            decision_screen("Dia 22 — Selecione sua ênfase", OPT2_A, OPT2_B, max(0,decision_timer))
+            decision_screen("Dia 22 — Selecione sua ênfase", OPT2_A, OPT2_B, max(0, decision_timer))
             if decision_timer <= 0:
                 choices["d2"] = OPT2_B
                 state = State.FINAL
@@ -277,6 +334,7 @@ async def game_loop():
 
     pg.quit()
     sys.exit()
+
 
 if __name__ == "__main__":
     asyncio.run(game_loop())
