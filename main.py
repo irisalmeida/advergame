@@ -60,7 +60,6 @@ dicas = [
     "Sustentabilidade também gera lucro.",
     "Conheça bem o seu público-alvo.",
     "Marketing digital é essencial hoje.",
-    "Agronegócio é oportunidade crescente.",
     "Aposte em parcerias estratégicas.",
     "Adapte-se rápido às mudanças do mercado.",
     "Gerencie bem seu fluxo de caixa.",
