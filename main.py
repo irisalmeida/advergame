@@ -1,5 +1,3 @@
-# main.py – Advergame completo com async para pygbag/Pages
-
 try:
     import pygbag.aio as asyncio  # Web (pygbag)
 except ImportError:
@@ -10,7 +8,9 @@ import sys
 import time
 import random
 
+# ------------------------------
 # Configurações básicas
+# ------------------------------
 WIDTH, HEIGHT = 960, 540
 FPS = 60
 
@@ -24,7 +24,9 @@ YELLOW = (255, 210, 90)
 CARD_L = (80, 235, 255)
 CARD_R = (120, 140, 200)
 
-# Inicia Pygame
+# ------------------------------
+# Inicialização do Pygame
+# ------------------------------
 pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 pg.display.set_caption("IF/ELSE — Trilha da Borborema")
@@ -32,10 +34,7 @@ clock = pg.time.Clock()
 
 
 def load_font(size=24):
-    try:
-        return pg.font.SysFont("DejaVu Sans Mono", size)
-    except:
-        return pg.font.SysFont(None, size)
+    return pg.font.Font(None, size)  # Fonte padrão compatível com Web
 
 
 FONT = load_font(22)
@@ -43,6 +42,9 @@ FONT_BIG = load_font(36)
 FONT_HUGE = load_font(56)
 
 
+# ------------------------------
+# Estados do jogo
+# ------------------------------
 class State:
     ABERTURA = 0
     JOGO = 1
@@ -53,7 +55,9 @@ class State:
 
 state = State.ABERTURA
 
-# Mundo do jogo
+# ------------------------------
+# Variáveis do mundo
+# ------------------------------
 player_x, player_y = WIDTH * 0.15, HEIGHT * 0.7
 player_vy = 0.0
 on_ground = True
@@ -66,6 +70,7 @@ collects = []
 commits = 0
 t0 = 0
 decision_timer = 5.0
+choices = {"d1": None, "d2": None}
 
 # Decisões A/B
 OPT1_A = {
@@ -92,14 +97,14 @@ OPT2_B = {
     "who": "Caio Viana",
     "meta": "Palco Broto de Catingueiras | 22/08 — 16h45",
 }
-choices = {"d1": None, "d2": None}
 
 # Botões finais
 BTN_DOWNLOAD = pg.Rect(WIDTH // 2 - 180, HEIGHT - 110, 160, 50)
 BTN_RESTART = pg.Rect(WIDTH // 2 + 20, HEIGHT - 110, 160, 50)
 
 
-# Helpers de desenho, física, UI, etc.
+# ------------------------------
+# Funções utilitárias
 # ------------------------------
 def reset_level():
     global obstacles, collects, scroll_x, player_y, player_vy, on_ground, commits, t0
@@ -153,8 +158,6 @@ def update_world(dt):
             collects.remove(c)
 
 
-# UI Drawing
-# ------------------------------
 def draw_text(surf, text, pos, font=FONT, color=FG, center=False):
     if isinstance(text, (list, tuple)):
         y = pos[1]
@@ -208,7 +211,6 @@ def final_screen():
         draw_text(screen, f"{label}: {opt['title']}", (r.x + 16, r.y + 12), FONT_BIG, FG)
         draw_text(screen, f"{opt['who']} | {opt['meta']}", (r.x + 16, r.y + 52), FONT, (200, 210, 220))
         y += 112
-    # buttons
     pg.draw.rect(screen, (32, 120, 90), BTN_DOWNLOAD, 0, border_radius=12)
     pg.draw.rect(screen, (0, 0, 0), BTN_DOWNLOAD, 2, border_radius=12)
     draw_text(screen, "Baixar CSV", (BTN_DOWNLOAD.centerx, BTN_DOWNLOAD.centery - 12), FONT_BIG, (0, 0, 0), center=True)
@@ -217,32 +219,38 @@ def final_screen():
     draw_text(screen, "Reiniciar", (BTN_RESTART.centerx, BTN_RESTART.centery - 12), FONT_BIG, (0, 0, 0), center=True)
     draw_text(screen, f"Commits coletados: {commits}", (WIDTH - 260, 16), FONT, YELLOW)
 
-    class DummyBG:
-        def draw(self, surf, dt):
-            surf.fill((255, 0, 0))  # fundo vermelho
-    bg = DummyBG()
 
-    def draw_world(surf, dt):
-        pg.draw.rect(surf, (0, 0, 255), (0, HEIGHT//2, WIDTH, HEIGHT//2))
+# ------------------------------
+# Objetos de fundo e jogador
+# ------------------------------
+class DummyBG:
+    def draw(self, surf, dt):
+        surf.fill(BG)
 
-    def draw_player(surf):
-        pg.draw.rect(surf, (255, 255, 0), player_rect())
 
-    def download_csv(data):
-        print("CSV gerado:", data)
+bg = DummyBG()
 
-    def save_local(data):
-        print("Dados salvos:", data)
 
+def draw_world(surf, dt):
+    pg.draw.rect(surf, (0, 0, 255), (0, HEIGHT // 2, WIDTH, HEIGHT // 2))
+
+
+def draw_player(surf):
+    pg.draw.rect(surf, (255, 255, 0), player_rect())
+
+
+# ------------------------------
+# Loop principal assíncrono
+# ------------------------------
 async def game_loop():
     global state, decision_timer, choices, commits
     reset_level()
-    state = State.ABERTURA
     decision_timer = 5.0
     running = True
 
     while running:
         dt = clock.tick(FPS) / 1000.0
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
@@ -259,12 +267,10 @@ async def game_loop():
                         choices["d1"] = OPT1_A
                         state = State.JOGO
                         reset_level()
-                        decision_timer = 5.0
                     elif R.collidepoint(mx, my):
                         choices["d1"] = OPT1_B
                         state = State.JOGO
                         reset_level()
-                        decision_timer = 5.0
                 elif state == State.DEC2:
                     L, R = decision_screen("Dia 22 — Selecione sua ênfase", OPT2_A, OPT2_B, decision_timer)
                     if L.collidepoint(mx, my):
@@ -275,16 +281,13 @@ async def game_loop():
                         state = State.FINAL
                 elif state == State.FINAL:
                     if BTN_DOWNLOAD.collidepoint(mx, my):
-                        ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                        row = [ts, choices["d1"]["id"], choices["d2"]["id"], str(commits)]
-                        download_csv([row])
+                        print("Baixar CSV")
                     elif BTN_RESTART.collidepoint(mx, my):
                         choices = {"d1": None, "d2": None}
                         state = State.ABERTURA
 
-        # Render
+        # Renderização
         if state == State.ABERTURA:
-            screen.fill(BG)
             bg.draw(screen, dt)
             draw_text(screen, "IF/ELSE — Trilha da Borborema", (WIDTH // 2, 140), FONT_HUGE, ACCENT2, center=True)
             draw_text(
@@ -316,7 +319,6 @@ async def game_loop():
                 choices["d1"] = OPT1_B
                 state = State.JOGO
                 reset_level()
-                decision_timer = 5.0
         elif state == State.DEC2:
             decision_timer -= dt
             decision_screen("Dia 22 — Selecione sua ênfase", OPT2_A, OPT2_B, max(0, decision_timer))
@@ -325,16 +327,15 @@ async def game_loop():
                 state = State.FINAL
         elif state == State.FINAL:
             final_screen()
-            save_local({"timestamp": time.time(), "d1": choices["d1"]["id"], "d2": choices["d2"]["id"], "commits": commits})
 
         pg.display.flip()
-
-        # Libera para o navegador:
-        await asyncio.sleep(0)
+        await asyncio.sleep(0)  # ESSENCIAL no navegador
 
     pg.quit()
-    sys.exit()
 
 
+# ------------------------------
+# Execução
+# ------------------------------
 if __name__ == "__main__":
     asyncio.run(game_loop())
